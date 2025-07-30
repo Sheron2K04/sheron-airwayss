@@ -38,9 +38,19 @@
             opacity: 0;
             transform: translateY(-10px);
         }
+        /* New background style */
+        body {
+            background-color: #1e3a8a;
+        }
+        .main-content-area {
+            background-color: #f0f4f8;
+        }
+        .card-bg {
+            background-color: #ffffff;
+        }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="font-sans">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <div id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 w-64 bg-navy-900 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
@@ -143,7 +153,7 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto main-content-area p-6">
                 <!-- Page Header -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-semibold text-gray-800">Flight Operations</h2>
@@ -178,7 +188,7 @@
                 <!-- Flight Management Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                     <!-- Add Flight Card -->
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="card-bg rounded-lg shadow overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900">
                                 <i class="fas fa-plus-circle text-blue-500 mr-2"></i> Add New Flight
@@ -249,7 +259,7 @@
                     </div>
 
                     <!-- Update Flight Card -->
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="card-bg rounded-lg shadow overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900">
                                 <i class="fas fa-edit text-green-500 mr-2"></i> Update Flight
@@ -301,7 +311,7 @@
                     </div>
 
                     <!-- Flight Routes Card -->
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="card-bg rounded-lg shadow overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900">
                                 <i class="fas fa-route text-purple-500 mr-2"></i> Manage Flight Routes
@@ -365,7 +375,7 @@
                 </div>
 
                 <!-- Active Flights Table -->
-                <div class="bg-white shadow rounded-lg overflow-hidden">
+                <div class="card-bg shadow rounded-lg overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900">
                             <i class="fas fa-plane-departure text-blue-500 mr-2"></i> Active Flights
