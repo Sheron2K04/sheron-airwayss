@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sheron Airways - Flight Search Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .flight-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .flight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+        }
+        .flight-card.selected {
+            border-left-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .ticket-preview {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .ticket-preview.active {
+            max-height: 500px;
+            transition: max-height 0.5s ease-in;
+        }
+        .date-tab {
+            transition: all 0.2s ease;
+        }
+        .date-tab.active {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-8 py-4 bg-[#0A1A3F] sticky top-0 z-50 shadow-lg">
+        <div class="text-2xl font-bold text-white flex items-center">
+            <i class="fas fa-plane text-blue-400 mr-2"></i>
+            Sheron Airways
+        </div>
+        <nav class="flex items-center space-x-8">
+            <a href="index.html" class="text-white hover:text-blue-300">Home</a>
+            <a href="#" class="text-white hover:text-blue-300" id="loginBtn">Login</a>
+            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg" id="signupBtn">Sign Up</a>
+            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg hidden" id="logoutBtn">Logout</a>
+        </nav>
+    </header>
+
+    <!-- Search Summary -->
+    <section class="bg-white shadow-md py-6 px-8 mb-6">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Select your departure flight</h1>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div class="flex items-center">
+                    <div class="text-center">
+                        <div class="text-lg font-semibold">Milan</div>
+                        <div class="text-sm text-gray-500">MXP</div>
+                    </div>
+                    <div class="mx-4">
+                        <i class="fas fa-plane text-blue-500"></i>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold">Colombo</div>
+                        <div class="text-sm text-gray-500">CMB</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <div class="text-center mr-6">
+                        <div class="text-sm text-gray-500">Departure</div>
+                        <div class="font-medium" id="selected-date-display">Wed, 30 Jul 2025</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-500">Passengers</div>
+                        <div class="font-medium">2 Adults</div>
+                    </div>
+                </div>
+
+                <a href="index.html#search-flight" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                    <i class="fas fa-pencil-alt mr-2"></i> Modify Search
+                </a>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-b border-gray-200 py-3">
+                <div class="text-gray-700"><span id="results-count">5</span> results</div>
+                <div class="text-sm text-gray-500">Free cancellation for all passengers</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Flight Results -->
+    <section class="max-w-6xl mx-auto px-4 pb-12">
+        <!-- Date Selector -->
+        <div class="flex overflow-x-auto gap-2 mb-6 pb-2" id="date-selector">
+            <!-- Dates will be populated by JavaScript -->
+        </div>
+
+        <!-- Flight Cards Container -->
+        <div id="flight-results-container">
+            <!-- Flights will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <script>
+        // Flight data for different dates
+        const flightData = {
+            "2025-07-30": [
+                {
+                    id: "flight1",
+                    departureTime: "23:00",
+                    arrivalTime: "02:05",
+                    duration: "23h 35m",
+                    stops: 1,
+                    price: 803,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "DXB",
+                            departure: "23:00",
+                            arrival: "06:35",
+                            duration: "7h 35m",
+                            flightNumber: "SA 234"
+                        },
+                        {
+                            from: "DXB",
+                            to: "CMB",
+                            departure: "09:05",
+                            arrival: "14:05",
+                            duration: "4h 00m",
+                            flightNumber: "SA 567"
+                        }
+                    ]
+                },
+                {
+                    id: "flight2",
+                    departureTime: "23:00",
+                    arrivalTime: "03:05",
+                    duration: "24h 35m",
+                    stops: 1,
+                    price: 756,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "AUH",
+                            departure: "23:00",
+                            arrival: "07:30",
+                            duration: "8h 30m",
+                            flightNumber: "SA 345"
+                        },
+                        {
+                            from: "AUH",
+                            to: "CMB",
+                            departure: "10:30",
+                            arrival: "15:05",
+                            duration: "4h 35m",
+                            flightNumber: "SA 678"
+                        }
+                    ]
+                }
+            ],
+            "2025-07-31": [
+                {
+                    id: "flight3",
+                    departureTime: "06:30",
+                    arrivalTime: "12:50",
+                    duration: "18h 20m",
+                    stops: 1,
+                    price: 601,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "IST",
+                            departure: "06:30",
+                            arrival: "10:15",
+                            duration: "3h 45m",
+                            flightNumber: "SA 123"
+                        },
+                        {
+                            from: "IST",
+                            to: "CMB",
+                            departure: "12:30",
+                            arrival: "20:50",
+                            duration: "7h 20m",
+                            flightNumber: "SA 456"
+                        }
+                    ]
+                },
+                {
+                    id: "flight4",
+                    departureTime: "12:15",
+                    arrivalTime: "19:30",
+                    duration: "19h 15m",
+                    stops: 1,
+                    price: 645,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "DOH",
+                            departure: "12:15",
+                            arrival: "19:45",
+                            duration: "7h 30m",
+                            flightNumber: "SA 789"
+                        },
+                        {
+                            from: "DOH",
+                            to: "CMB",
+                            departure: "21:30",
+                            arrival: "03:30",
+                            duration: "5h 00m",
+                            flightNumber: "SA 012"
+                        }
+                    ]
+                }
+            ],
+            "2025-08-01": [
+                {
+                    id: "flight5",
+                    departureTime: "08:45",
+                    arrivalTime: "15:10",
+                    duration: "18h 25m",
+                    stops: 1,
+                    price: 738,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "DXB",
+                            departure: "08:45",
+                            arrival: "16:20",
+                            duration: "7h 35m",
+                            flightNumber: "SA 234"
+                        },
+                        {
+                            from: "DXB",
+                            to: "CMB",
+                            departure: "18:50",
+                            arrival: "23:10",
+                            duration: "4h 20m",
+                            flightNumber: "SA 567"
+                        }
+                    ]
+                }
+            ],
+            "2025-08-02": [
+                {
+                    id: "flight6",
+                    departureTime: "14:20",
+                    arrivalTime: "21:35",
+                    duration: "19h 15m",
+                    stops: 1,
+                    price: 832,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "AUH",
+                            departure: "14:20",
+                            arrival: "22:50",
+                            duration: "8h 30m",
+                            flightNumber: "SA 345"
+                        },
+                        {
+                            from: "AUH",
+                            to: "CMB",
+                            departure: "00:30",
+                            arrival: "05:35",
+                            duration: "5h 05m",
+                            flightNumber: "SA 678"
+                        }
+                    ]
+                }
+            ],
+            "2025-08-03": [
+                {
+                    id: "flight7",
+                    departureTime: "09:15",
+                    arrivalTime: "16:30",
+                    duration: "19h 15m",
+                    stops: 1,
+                    price: 684,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "DOH",
+                            departure: "09:15",
+                            arrival: "16:45",
+                            duration: "7h 30m",
+                            flightNumber: "SA 789"
+                        },
+                        {
+                            from: "DOH",
+                            to: "CMB",
+                            departure: "18:30",
+                            arrival: "00:30",
+                            duration: "6h 00m",
+                            flightNumber: "SA 012"
+                        }
+                    ]
+                }
+            ],
+            "2025-08-04": [
+                {
+                    id: "flight8",
+                    departureTime: "11:30",
+                    arrivalTime: "18:45",
+                    duration: "19h 15m",
+                    stops: 1,
+                    price: 707,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "IST",
+                            departure: "11:30",
+                            arrival: "15:15",
+                            duration: "3h 45m",
+                            flightNumber: "SA 123"
+                        },
+                        {
+                            from: "IST",
+                            to: "CMB",
+                            departure: "17:15",
+                            arrival: "01:45",
+                            duration: "7h 30m",
+                            flightNumber: "SA 456"
+                        }
+                    ]
+                }
+            ],
+            "2025-08-05": [
+                {
+                    id: "flight9",
+                    departureTime: "16:45",
+                    arrivalTime: "23:00",
+                    duration: "18h 15m",
+                    stops: 1,
+                    price: 1032,
+                    segments: [
+                        {
+                            from: "MXP",
+                            to: "DXB",
+                            departure: "16:45",
+                            arrival: "00:20",
+                            duration: "7h 35m",
+                            flightNumber: "SA 234"
+                        },
+                        {
+                            from: "DXB",
+                            to: "CMB",
+                            departure: "02:20",
+                            arrival: "07:00",
+                            duration: "4h 40m",
+                            flightNumber: "SA 567"
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Date formatting
+        const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+        const longDateOptions = { ...dateOptions, year: 'numeric' };
+
+        // Initialize the page with flights for the first date
+        let currentDate = "2025-07-30";
+
+        function initializePage() {
+            populateDateSelector();
+            showFlightsForDate(currentDate);
+            protectButtonsAndLinks();
+        }
+
+        function populateDateSelector() {
+            const dateSelector = document.getElementById('date-selector');
+            dateSelector.innerHTML = '';
+
+            Object.keys(flightData).forEach(dateStr => {
+                const date = new Date(dateStr);
+                const dateKey = date.toISOString().split('T')[0];
+                const formattedDate = date.toLocaleDateString('en-US', dateOptions);
+                const flights = flightData[dateKey];
+                const minPrice = Math.min(...flights.map(f => f.price));
+
+                const dateTab = document.createElement('div');
+                dateTab.className = `date-tab flex-none w-32 text-center border rounded-lg py-3 cursor-pointer ${dateKey === currentDate ? 'active bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}`;
+                dateTab.innerHTML = `
+                    <div class="text-sm font-medium">${formattedDate}</div>
+                    <div class="text-lg font-bold ${dateKey === currentDate ? 'text-blue-600' : ''}">€${minPrice}</div>
+                `;
+                dateTab.addEventListener('click', () => {
+                    currentDate = dateKey;
+                    showFlightsForDate(dateKey);
+                    updateActiveDateTab();
+                    document.getElementById('selected-date-display').textContent = date.toLocaleDateString('en-US', longDateOptions);
+                });
+
+                dateSelector.appendChild(dateTab);
+            });
+        }
+
+        function updateActiveDateTab() {
+            document.querySelectorAll('.date-tab').forEach(tab => {
+                tab.classList.remove('active', 'bg-blue-50', 'border-blue-200');
+                const tabDate = tab.textContent.match(/\w+, \w+ \d+/)[0];
+                const currentFormattedDate = new Date(currentDate).toLocaleDateString('en-US', dateOptions);
+
+                if (tabDate === currentFormattedDate) {
+                    tab.classList.add('active', 'bg-blue-50', 'border-blue-200');
+                    tab.querySelector('.font-bold').classList.add('text-blue-600');
+                } else {
+                    tab.querySelector('.font-bold').classList.remove('text-blue-600');
+                }
+            });
+        }
+
+        function showFlightsForDate(date) {
+            const flights = flightData[date];
+            const container = document.getElementById('flight-results-container');
+            container.innerHTML = '';
+
+            if (flights && flights.length > 0) {
+                document.getElementById('results-count').textContent = flights.length;
+
+                flights.forEach(flight => {
+                    const flightCard = document.createElement('div');
+                    flightCard.className = 'flight-card bg-white rounded-lg shadow-sm p-6 cursor-pointer mb-4';
+                    flightCard.setAttribute('onclick', `toggleFlightDetails('${flight.id}')`);
+                    flightCard.innerHTML = `
+                        <div class="flex flex-col md:flex-row md:items-center justify-between">
+                            <div class="flex items-center mb-4 md:mb-0">
+                                <div class="text-center mr-8">
+                                    <div class="text-xl font-bold">${flight.departureTime}</div>
+                                    <div class="text-sm text-gray-500">MXP</div>
+                                </div>
+                                <div class="text-center mx-4">
+                                    <div class="text-sm text-gray-500">${flight.stops} Stop, ${flight.duration}</div>
+                                    <div class="w-32 h-px bg-gray-300 my-2"></div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xl font-bold">${flight.arrivalTime}<sup>${flight.arrivalTime.includes('+') ? '' : '+1'}</sup></div>
+                                    <div class="text-sm text-gray-500">CMB</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="mr-8">
+                                    <div class="text-lg font-bold text-right">€${flight.price}</div>
+                                    <div class="text-sm text-gray-500 text-right">Economy</div>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-400" id="${flight.id}-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="ticket-preview mt-4" id="${flight.id}-details">
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="font-bold mb-3">Flight Details</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-${flight.segments.length === 1 ? '1' : '3'} gap-4">
+                                    ${flight.segments.map((segment, index) => `
+                                        <div>
+                                            <h4 class="text-sm font-semibold text-gray-500 mb-2">${segment.from} to ${segment.to}</h4>
+                                            <div class="flex items-center justify-between py-2">
+                                                <div>
+                                                    <div class="font-medium">${segment.departure} - ${segment.arrival}</div>
+                                                    <div class="text-sm text-gray-500">Sheron Airways · ${segment.flightNumber}</div>
+                                                </div>
+                                                <div class="text-sm">${segment.duration}</div>
+                                            </div>
+                                        </div>
+                                        ${index < flight.segments.length - 1 ? `
+                                            <div class="text-center">
+                                                <div class="text-sm text-gray-500 py-4">Layover: ${calculateLayover(flight.segments[index].arrival, flight.segments[index+1].departure)}</div>
+                                            </div>
+                                        ` : ''}
+                                    `).join('')}
+                                </div>
+
+                                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold mb-2">Economy Class</h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li class="flex items-center"><i class="fas fa-suitcase-rolling text-blue-500 mr-2"></i> 30kg checked baggage</li>
+                                            <li class="flex items-center"><i class="fas fa-utensils text-blue-500 mr-2"></i> Meals included</li>
+                                            <li class="flex items-center"><i class="fas fa-tv text-blue-500 mr-2"></i> In-flight entertainment</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold mb-2">Pricing</h4>
+                                        <div class="text-sm space-y-2">
+                                            <div class="flex justify-between">
+                                                <span>2 Adults</span>
+                                                <span>€${(flight.price * 2).toFixed(2)}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>Taxes & Fees</span>
+                                                <span>€${Math.round(flight.price * 0.15).toFixed(2)}</span>
+                                            </div>
+                                            <div class="flex justify-between font-bold border-t border-gray-200 pt-2 mt-2">
+                                                <span>Total</span>
+                                                <span>€${(flight.price * 2 * 1.15).toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 text-right">
+                                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
+                                        Select Flight
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(flightCard);
+                });
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-white rounded-lg shadow-sm">
+                        <i class="fas fa-plane-slash text-4xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-medium text-gray-700 mb-2">No flights available</h3>
+                        <p class="text-gray-500 mb-4">We couldn't find any flights for the selected date.</p>
+                        <a href="index.html#search-flight" class="text-blue-600 hover:text-blue-800 font-medium">
+                            <i class="fas fa-search mr-2"></i> Try a different search
+                        </a>
+                    </div>
+                `;
+                document.getElementById('results-count').textContent = '0';
+            }
+        }
+
+        function calculateLayover(arrival, departure) {
+            // Simple calculation for demo purposes
+            const arrTime = arrival.split(':');
+            const depTime = departure.split(':');
+
+            let arrHour = parseInt(arrTime[0]);
+            let arrMin = parseInt(arrTime[1]);
+            let depHour = parseInt(depTime[0]);
+            let depMin = parseInt(depTime[1]);
+
+            // If departure is next day (like 02:00 vs 23:00)
+            if (depHour < arrHour || (depHour === arrHour && depMin < arrMin)) {
+                depHour += 24;
+            }
+
+            const totalMinutes = (depHour * 60 + depMin) - (arrHour * 60 + arrMin);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+
+            return `${hours}h ${minutes}m`;
+        }
+
+        // Toggle flight details
+        function toggleFlightDetails(flightId) {
+            const details = document.getElementById(`${flightId}-details`);
+            const arrow = document.getElementById(`${flightId}-arrow`);
+
+            details.classList.toggle('active');
+            arrow.classList.toggle('transform');
+            arrow.classList.toggle('rotate-180');
+
+            // Close other open flight details
+            document.querySelectorAll('.ticket-preview').forEach(item => {
+                if (item.id !== `${flightId}-details` && item.classList.contains('active')) {
+                    item.classList.remove('active');
+                    const otherArrow = document.getElementById(item.id.replace('-details', '-arrow'));
+                    otherArrow.classList.remove('transform', 'rotate-180');
+                }
+            });
+        }
+
+        // Cookie and authentication functions
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+
+        function isLoggedIn() {
+            return getCookie("loggedIn") === "true";
+        }
+
+        function protectButtonsAndLinks() {
+            // Update UI based on login status
+            const loginBtn = document.getElementById('loginBtn');
+            const signupBtn = document.getElementById('signupBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (isLoggedIn()) {
+                loginBtn.classList.add('hidden');
+                signupBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+
+                // Add logout functionality
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.cookie = "loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    window.location.href = "index.html";
+                });
+            } else {
+                loginBtn.classList.remove('hidden');
+                signupBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+
+                // Add login/signup functionality
+                loginBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = "signin.html";
+                });
+
+                signupBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = "signup.html";
+                });
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
