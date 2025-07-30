@@ -16,6 +16,28 @@
         .navy-gradient {
             background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         }
+        .dropdown-enter {
+            transition: all 0.3s ease-out;
+        }
+        .dropdown-enter-from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .dropdown-enter-to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .dropdown-leave {
+            transition: all 0.3s ease-in;
+        }
+        .dropdown-leave-from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .dropdown-leave-to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -29,7 +51,17 @@
                 </div>
             </div>
             <div class="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
-                <nav class="flex-1 px-2 space-y-1">
+                <div class="px-4 py-6 flex items-center space-x-4 border-b border-navy-700">
+                    <div class="relative">
+                        <img id="userAvatar" class="h-12 w-12 rounded-full object-cover cursor-pointer" src="https://ui-avatars.com/api/?name=Admin+User&background=1e40af&color=fff" alt="Admin User">
+                    </div>
+                    <div>
+                        <h3 id="userFullName" class="text-sm font-medium text-white">Admin User</h3>
+                        <p id="userEmail" class="text-xs text-blue-200">admin@sheronairways.com</p>
+                        <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-600 text-white">Admin</span>
+                    </div>
+                </div>
+                <nav class="flex-1 px-2 space-y-1 mt-4">
                     <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-blue-100 bg-navy-700 rounded-md group">
                         <i class="fas fa-tachometer-alt mr-3 text-blue-300"></i>
                         Dashboard
@@ -76,10 +108,37 @@
                         <h1 class="text-xl font-bold text-gray-800">SHERON AIRWAYS <span class="font-normal text-gray-600">| Flight Management</span></h1>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <button class="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                    </button>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <div class="flex items-center space-x-2 cursor-pointer" id="userMenuButton">
+                            <span class="hidden md:inline text-sm font-medium text-gray-700">Admin User</span>
+                            <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name=Admin+User&background=1e40af&color=fff" alt="Admin User">
+                            <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
+                        </div>
+
+                        <!-- Dropdown menu -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div class="py-1" role="none">
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-medium text-gray-900" id="dropdownUserName">Admin User</p>
+                                    <p class="text-xs text-gray-500 truncate" id="dropdownUserEmail">admin@sheronairways.com</p>
+                                </div>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                    <i class="fas fa-user mr-2 text-gray-500"></i> Your Profile
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                    <i class="fas fa-cog mr-2 text-gray-500"></i> Settings
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                    <i class="fas fa-bell mr-2 text-gray-500"></i> Notifications
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100" role="menuitem">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Sign out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -445,6 +504,43 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
         });
+
+        // Toggle user dropdown
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuButton.addEventListener('click', function() {
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+
+        // In a real application, you would fetch this data from your backend
+        // For demonstration, we'll use mock data
+        const currentUser = {
+            user_id: 1,
+            full_name: "Admin User",
+            email: "admin@sheronairways.com",
+            phone: "+1 (555) 123-4567",
+            user_type: "admin"
+        };
+
+        // Update user info in the UI
+        document.getElementById('userFullName').textContent = currentUser.full_name;
+        document.getElementById('userEmail').textContent = currentUser.email;
+        document.getElementById('dropdownUserName').textContent = currentUser.full_name;
+        document.getElementById('dropdownUserEmail').textContent = currentUser.email;
+
+        // Update avatar with initials if no image is available
+        if (!document.getElementById('userAvatar').src) {
+            const initials = currentUser.full_name.split(' ').map(name => name[0]).join('');
+            document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${initials}&background=1e40af&color=fff`;
+        }
     </script>
 </body>
 </html>
