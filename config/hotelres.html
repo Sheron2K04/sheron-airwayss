@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotels | Sheron Airways</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hotel-card {
+            transition: all 0.3s ease;
+        }
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .search-box {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-100">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-8 py-4 bg-[#0A1A3F] sticky top-0 z-50 shadow-lg">
+        <div class="text-2xl font-bold text-white flex items-center">
+            <i class="fas fa-plane text-blue-400 mr-2"></i>
+            Sheron Airways
+        </div>
+
+        <nav class="flex items-center space-x-8">
+            <a href="index.html" class="text-white hover:text-blue-300">Home</a>
+            <a href="destination.html" class="text-white hover:text-blue-300">Destinations</a>
+            <a href="#search-flight" class="text-white hover:text-blue-300">Flights</a>
+            <a href="#" class="text-white hover:text-blue-300 font-medium">Hotels</a>
+            <a href="#" class="text-white hover:text-blue-300" id="loginBtn">Login</a>
+            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg" id="signupBtn">Sign Up</a>
+            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg hidden" id="logoutBtn">Logout</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-[#0A1A3F] h-96 flex flex-col justify-center items-center text-center px-4 relative">
+        <div class="absolute inset-0 bg-gradient-to-r from-[#0A1A3F] to-[#1a3a8a] opacity-90"></div>
+        <div class="relative z-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">Find Your Perfect Stay</h1>
+            <p class="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">Book hotels at the best prices with Sheron Airways</p>
+        </div>
+    </section>
+
+    <!-- Search Box -->
+    <section class="px-4 -mt-16 relative z-20">
+        <div class="max-w-6xl mx-auto">
+            <div class="search-box bg-white rounded-xl shadow-lg p-6">
+                <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Destination</label>
+                        <div class="relative">
+                            <i class="fas fa-map-marker-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Where are you going?">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Check-in</label>
+                        <div class="relative">
+                            <i class="far fa-calendar-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="date" class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Check-out</label>
+                        <div class="relative">
+                            <i class="far fa-calendar-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="date" class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Guests</label>
+                        <div class="relative">
+                            <i class="fas fa-user-friends absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <select class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option>1 Adult</option>
+                                <option>2 Adults</option>
+                                <option>3 Adults</option>
+                                <option>4 Adults</option>
+                                <option>Family (2 Adults + 2 Children)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="md:col-span-4 flex justify-center">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg w-full md:w-auto">
+                            <i class="fas fa-search mr-2"></i> Search Hotels
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="px-4 py-8 max-w-6xl mx-auto">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h3 class="font-medium">Filter by:</h3>
+            <div class="flex flex-wrap gap-2">
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100">Price</button>
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100">Rating</button>
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100">Facilities</button>
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100">Free Cancellation</button>
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100">Breakfast Included</button>
+                <button class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-100">Swimming Pool</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hotels Grid -->
+    <section class="px-4 py-8 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Hotel 1 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="The Ritz Paris" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.9
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">The Ritz Paris</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Paris, France
+                    </p>
+                    <p class="text-gray-700 mb-4">Luxury hotel located in the heart of Paris, offering elegant rooms and exceptional service.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$450</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 2 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Burj Al Arab" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.8
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Burj Al Arab</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Dubai, UAE
+                    </p>
+                    <p class="text-gray-700 mb-4">Iconic sail-shaped hotel offering ultra-luxurious accommodations with panoramic sea views.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$1,200</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 3 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="The Plaza" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.7
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">The Plaza</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> New York, USA
+                    </p>
+                    <p class="text-gray-700 mb-4">Historic luxury hotel at Fifth Avenue offering elegant rooms and Central Park views.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$600</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 4 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1522798514-97ceb8c4f1c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Marina Bay Sands" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.8
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Marina Bay Sands</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Singapore
+                    </p>
+                    <p class="text-gray-700 mb-4">Iconic hotel with the world's largest rooftop infinity pool and stunning city views.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$400</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 5 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Taj Lake Palace" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.9
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Taj Lake Palace</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Udaipur, India
+                    </p>
+                    <p class="text-gray-700 mb-4">Romantic white marble hotel seemingly floating on Lake Pichola with royal heritage.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$350</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 6 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1535827841776-24afc1e255ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="The Savoy" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.7
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">The Savoy</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> London, UK
+                    </p>
+                    <p class="text-gray-700 mb-4">Legendary luxury hotel on the River Thames with world-class dining and service.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$550</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 7 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Hotel del Coronado" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.6
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Hotel del Coronado</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> San Diego, USA
+                    </p>
+                    <p class="text-gray-700 mb-4">Historic beachfront resort with Victorian architecture and modern amenities.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$380</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 8 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Mandarin Oriental" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.8
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Mandarin Oriental</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Bangkok, Thailand
+                    </p>
+                    <p class="text-gray-700 mb-4">Luxurious riverside hotel offering traditional Thai hospitality and modern comforts.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$320</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 9 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Belmond Hotel das Cataratas" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.9
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Belmond Hotel das Cataratas</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Foz do Iguaçu, Brazil
+                    </p>
+                    <p class="text-gray-700 mb-4">The only hotel located within Iguazu National Park, right by the waterfalls.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$420</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 10 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1535827841776-24afc1e255ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Four Seasons Resort" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.8
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Four Seasons Resort</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Bora Bora, French Polynesia
+                    </p>
+                    <p class="text-gray-700 mb-4">Overwater bungalows with glass floors for viewing marine life in crystal-clear waters.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$1,000</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 11 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="The Oberoi Amarvilas" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.9
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">The Oberoi Amarvilas</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Agra, India
+                    </p>
+                    <p class="text-gray-700 mb-4">Luxury hotel with uninterrupted views of the Taj Mahal from every room.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$500</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel 12 -->
+            <div class="hotel-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1522798514-97ceb8c4f1c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Aman Tokyo" class="w-full h-48 object-cover">
+                    <div class="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold flex items-center">
+                        <i class="fas fa-star mr-1"></i> 4.9
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-1">Aman Tokyo</h3>
+                    <p class="text-gray-600 mb-3 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i> Tokyo, Japan
+                    </p>
+                    <p class="text-gray-700 mb-4">Contemporary urban sanctuary blending Japanese design with Aman's signature style.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Starting from</p>
+                            <p class="text-xl font-bold text-blue-600">$1,100</p>
+                            <p class="text-xs text-gray-500">per night</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-center mt-12">
+            <nav class="flex items-center space-x-2">
+                <button class="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="px-3 py-1 rounded border border-blue-500 bg-blue-500 text-white">1</button>
+                <button class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">2</button>
+                <button class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">3</button>
+                <span class="px-2">...</span>
+                <button class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">8</button>
+                <button class="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="bg-[#0A1A3F] text-white px-4 py-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-2xl font-bold mb-4">Get Exclusive Hotel Deals</h2>
+            <p class="mb-6 max-w-2xl mx-auto">Subscribe to our newsletter and receive special offers and discounts for your next hotel stay.</p>
+            <form class="flex flex-col md:flex-row gap-2 max-w-md mx-auto">
+                <input type="email" placeholder="Your email address" class="flex-grow px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                    Subscribe
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#050E28] text-gray-400 py-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-white font-bold mb-4">Sheron Airways</h3>
+                    <p class="text-sm">Connecting you to the world with exceptional service and comfort.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="hover:text-white">Home</a></li>
+                        <li><a href="destination.html" class="hover:text-white">Destinations</a></li>
+                        <li><a href="#" class="hover:text-white">Flights</a></li>
+                        <li><a href="#" class="hover:text-white">Hotels</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Support</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white">FAQs</a></li>
+                        <li><a href="#" class="hover:text-white">Baggage Policy</a></li>
+                        <li><a href="#" class="hover:text-white">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+                <p>© 2025 Sheron Airways. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is logged in (from previous script)
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+
+        function isLoggedIn() {
+            return getCookie("loggedIn") === "true";
+        }
+
+        // Protect booking buttons if not logged in
+        document.querySelectorAll('.hotel-card button').forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                if (!isLoggedIn()) {
+                    e.preventDefault();
+                    window.location.href = "signin.html?redirect=hotels";
+                }
+            });
+        });
+
+        // Update UI based on login status
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        if (isLoggedIn()) {
+            loginBtn.classList.add('hidden');
+            signupBtn.classList.add('hidden');
+            logoutBtn.classList.remove('hidden');
+
+            // Add logout functionality
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.cookie = "loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.href = "index.html";
+            });
+        } else {
+            loginBtn.classList.remove('hidden');
+            signupBtn.classList.remove('hidden');
+            logoutBtn.classList.add('hidden');
+
+            // Add login/signup functionality
+            loginBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = "signin.html";
+            });
+
+            signupBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = "signup.html";
+            });
+        }
+    </script>
+</body>
+</html>
