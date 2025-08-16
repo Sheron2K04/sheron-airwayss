@@ -1,130 +1,150 @@
 <?php
-// api/flights.php
+// C:\xampp\htdocs\projectweb\sheronair\api\flights.php
 declare(strict_types=1);
-header('Content-Type: application/json');
 
-require_once __DIR__ . '/../config/database.php'; // must set $db = new PDO(...)
+header('Content-Type: application/json; charset=utf-8');
 
-/* Helpers */
-function qstr(string $key, string $default = ''): string {
-    return isset($_GET[$key]) ? trim((string)$_GET[$key]) : $default;
+// ✅ Correct path: includes is inside sheronair
+require_once __DIR__ . '/../includes/db_connection.php'; 
+
+// normalize to $pdo (always PDO instance)
+$pdo = null;
+if (isset($db) && $db instanceof PDO) {
+    $pdo = $db;
+} elseif (isset($conn) && $conn instanceof PDO) {
+    $pdo = $conn;
 }
-function fmt_duration(string $startTs, string $endTs): string {
-    try {
-        $s = new DateTime($startTs);
-        $e = new DateTime($endTs);
-        $secs = max(0, $e->getTimestamp() - $s->getTimestamp());
-        $h = intdiv($secs, 3600);
-        $m = intdiv($secs % 3600, 60);
-        return "{$h}h {$m}m";
-    } catch (Exception $e) {
-        return '';
-    }
-}
-
-$from = strtoupper(qstr('from'));
-$to   = strtoupper(qstr('to'));
-$date = qstr('date'); // Y-m-d
-$passengers = (int)($_GET['passengers'] ?? 1);
-if ($passengers < 1) $passengers = 1;
-
-if (!$from || !$to || !$date || !DateTime::createFromFormat('Y-m-d', $date)) {
-    echo json_encode([]);
+if (!$pdo) {
+    http_response_code(500);
+    echo json_encode(['error' => 'DB connection not available'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-/**
- * Schema assumptions (adjust names if yours differ):
- * flights(
- *   flight_id PK, flight_number, airline_name,
- *   departure_time TIMESTAMP, arrival_time TIMESTAMP,
- *   departure_iata VARCHAR(3), arrival_iata VARCHAR(3),
- *   price NUMERIC, stops INT
- * )
- * tickets(
- *   ticket_id PK, flight_id FK -> flights, ticket_class VARCHAR CHECK (...),
- *   ... (other fields not used here)
- * )
- *
- * We group flights and aggregate ticket classes present in tickets for each flight.
- */
-$sql = "
-SELECT
-    f.flight_id,
-    COALESCE(f.airline_name, 'Sheron Airways') AS airline_name,
-    f.flight_number,
-    f.departure_time,
-    f.arrival_time,
-    f.departure_iata   AS departure_code,
-    f.arrival_iata     AS arrival_code,
-    COALESCE(f.price, f.base_price, 0)         AS price,
-    COALESCE(f.stops, 0)                       AS stops,
-    ARRAY_AGG(DISTINCT t.ticket_class) FILTER (WHERE t.ticket_class IS NOT NULL) AS classes
-FROM flights f
-LEFT JOIN tickets t  ON t.flight_id = f.flight_id
-WHERE f.departure_iata = :from
-  AND f.arrival_iata   = :to
-  AND DATE(f.departure_time) = :depdate
-GROUP BY
-    f.flight_id, f.airline_name, f.flight_number, f.departure_time, f.arrival_time,
-    f.departure_iata, f.arrival_iata, f.price, f.base_price, f.stops
-ORDER BY f.departure_time ASC
-";
-
+/* PDO safety settings */
 try {
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        ':from'    => $from,
-        ':to'      => $to,
-        ':depdate' => $date,
-    ]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    echo json_encode([]);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+} catch (Throwable $e) {}
+
+/* ---------------- Helpers ---------------- */
+function bad(string $msg, int $code = 400): void {
+    http_response_code($code);
+    echo json_encode(['error' => $msg], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-$out = [];
-foreach ($rows as $r) {
-    $depTime = (new DateTime($r['departure_time']))->format('H:i');
-    $arrTime = (new DateTime($r['arrival_time']))->format('H:i');
-    $duration = fmt_duration($r['departure_time'], $r['arrival_time']);
+/* ---------------- Inputs & validation ---------------- */
+$from = isset($_GET['from']) ? strtoupper(trim((string)$_GET['from'])) : '';
+$to   = isset($_GET['to'])   ? strtoupper(trim((string)$_GET['to']))   : '';
+$date = isset($_GET['date']) ? (string)$_GET['date'] : '';
 
-    // Normalize Postgres array_agg result into PHP array
-    $classes = [];
-    if (isset($r['classes'])) {
-        if (is_array($r['classes'])) {
-            $classes = array_values(array_filter($r['classes']));
-        } else {
-            // Fallback if driver returns a string like "{Economy,Business}"
-            $cls = trim((string)$r['classes'], "{}");
-            $classes = $cls !== '' ? array_map('trim', explode(',', $cls)) : [];
-        }
-    }
-
-    $out[] = [
-        'id'              => $r['flight_id'],
-        'airline_name'    => $r['airline_name'],
-        'flight_number'   => $r['flight_number'],
-        'departureTime'   => $depTime,
-        'arrivalTime'     => $arrTime,
-        'departure_code'  => $r['departure_code'],
-        'arrival_code'    => $r['arrival_code'],
-        'duration'        => $duration,
-        'stops'           => (int)$r['stops'],
-        'price'           => (float)$r['price'],
-        // Simple single-segment; extend if you store multi-leg segments elsewhere.
-        'segments'        => [[
-            'departure_code' => $r['departure_code'],
-            'arrival_code'   => $r['arrival_code'],
-            'departure'      => $depTime,
-            'arrival'        => $arrTime,
-            'airline_name'   => $r['airline_name'],
-            'flight_number'  => $r['flight_number'],
-            'duration'       => $duration,
-        ]],
-        'classes'         => $classes, // e.g. ["Economy","Business"]
-    ];
+if ($from === '' || $to === '' || $date === '') {
+    bad('Invalid parameters');
+}
+if (!preg_match('/^[A-Z]{3}$/', $from) || !preg_match('/^[A-Z]{3}$/', $to)) {
+    bad('Airport codes must be 3 letters (IATA)');
+}
+$dt = DateTime::createFromFormat('Y-m-d', $date);
+if (!$dt || DateTime::getLastErrors()['error_count']) {
+    bad('Invalid date format, expected YYYY-MM-DD');
 }
 
-echo json_encode($out);
+/* ---------------- Look up airport IDs ---------------- */
+try {
+    $getId = $pdo->prepare("SELECT airport_id FROM airports WHERE code = :c LIMIT 1");
+
+    $getId->execute([':c' => $from]);
+    $originId = (int)($getId->fetchColumn() ?: 0);
+
+    $getId->execute([':c' => $to]);
+    $destId = (int)($getId->fetchColumn() ?: 0);
+
+    if ($originId <= 0 || $destId <= 0) {
+        bad('Unknown airport code(s)');
+    }
+
+    /* ---------------- Query flights ---------------- */
+    $sql = "
+      SELECT
+        f.flight_id,
+        f.flight_number,
+        f.departure_time,
+        f.arrival_time,
+        f.base_price,
+        ao.code AS departure_code,
+        ad.code AS arrival_code,
+        ac.model AS aircraft_model,
+        COALESCE(
+          ARRAY_AGG(DISTINCT s.class) FILTER (WHERE s.is_available IS TRUE),
+          ARRAY[]::varchar[]
+        ) AS classes
+      FROM flights f
+      JOIN airports ao ON ao.airport_id = f.origin_id
+      JOIN airports ad ON ad.airport_id = f.destination_id
+      LEFT JOIN aircraft ac ON ac.aircraft_id = f.aircraft_id
+      LEFT JOIN seats s ON s.aircraft_id = f.aircraft_id
+      WHERE f.origin_id = :origin
+        AND f.destination_id = :dest
+        AND DATE(f.departure_time) = :date
+      GROUP BY f.flight_id, ao.code, ad.code, ac.model
+      ORDER BY f.departure_time ASC
+    ";
+    $st = $pdo->prepare($sql);
+    $st->execute([
+        ':origin' => $originId,
+        ':dest'   => $destId,
+        ':date'   => $dt->format('Y-m-d'),
+    ]);
+    $rows = $st->fetchAll();
+
+    /* ---------------- Format response ---------------- */
+    $out = [];
+    foreach ($rows as $r) {
+        $dep = new DateTime($r['departure_time']);
+        $arr = new DateTime($r['arrival_time']);
+        $diff = $dep->diff($arr);
+        $hours = $diff->h + ($diff->d * 24);
+        $duration = $hours . 'h ' . $diff->i . 'm';
+
+        // Convert Postgres array string → PHP array
+        $classes = [];
+        if (!empty($r['classes'])) {
+            if (is_array($r['classes'])) {
+                $classes = $r['classes'];
+            } else {
+                $trim = trim((string)$r['classes'], "{}");
+                $classes = $trim === '' ? [] : array_map('trim', explode(',', $trim));
+            }
+        }
+
+        $out[] = [
+            'id'             => (string)$r['flight_id'],
+            'flight_number'  => (string)$r['flight_number'],
+            'departureTime'  => $dep->format('H:i'),
+            'arrivalTime'    => $arr->format('H:i'),
+            'departure_code' => (string)$r['departure_code'],
+            'arrival_code'   => (string)$r['arrival_code'],
+            'duration'       => $duration,
+            'stops'          => 0,
+            'price'          => (float)$r['base_price'],
+            'classes'        => $classes,
+            'segments'       => [[
+                'departure_code' => (string)$r['departure_code'],
+                'arrival_code'   => (string)$r['arrival_code'],
+                'departure'      => $dep->format('H:i'),
+                'arrival'        => $arr->format('H:i'),
+                'airline_name'   => 'Sheron Airways',
+                'flight_number'  => (string)$r['flight_number'],
+                'duration'       => $duration,
+            ]],
+        ];
+    }
+
+    echo json_encode($out, JSON_UNESCAPED_UNICODE);
+
+} catch (Throwable $e) {
+    error_log('[flights.php] ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['error' => 'Server error'], JSON_UNESCAPED_UNICODE);
+}

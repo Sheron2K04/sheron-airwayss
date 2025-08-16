@@ -1,28 +1,64 @@
 <?php
-require_once 'config/database.php';
+// C:\xampp\htdocs\projectweb\sheronair\search_results.php
+declare(strict_types=1);
+
 session_start();
 
-/**
- * Format a date string safely.
- */
-function formatDate($dateStr, $long = false) {
+/* ---------------- DB connection (works with either includes/db_connection.php or config/database.php) ---------------- */
+$pdo = null;
+
+// Primary (recommended): includes/db_connection.php should define $conn (PDO) or $db (PDO)
+$pathConn = __DIR__ . '/includes/db_connection.php';
+// Fallback (some setups): config/database.php should define $db (PDO)
+$pathCfg  = __DIR__ . '/config/database.php';
+
+if (file_exists($pathConn)) {
+    require_once $pathConn;
+    if (isset($conn) && $conn instanceof PDO) $pdo = $conn;
+    if (!$pdo && isset($db) && $db instanceof PDO) $pdo = $db;
+}
+if (!$pdo && file_exists($pathCfg)) {
+    require_once $pathCfg;
+    if (isset($db) && $db instanceof PDO) $pdo = $db;
+}
+
+if (!$pdo) {
+    http_response_code(500);
+    echo "<h1>Server error</h1><p>DB connection not available.</p>";
+    exit;
+}
+
+// Safer PDO attributes (harmless if already set)
+try {
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+} catch (Throwable $e) { /* ignore */ }
+
+/* ---------------- Optional BASE_URL (if your config defines it) ---------------- */
+if (!defined('BASE_URL')) {
+    // fallback so links won’t break locally
+    define('BASE_URL', '/projectweb/sheronair');
+}
+
+/* ---------------- Helpers ---------------- */
+function formatDate(string $dateStr, bool $long = false): string {
     try {
-        $date = new DateTime($dateStr);
-        return $date->format($long ? 'D, j M Y' : 'D, j M');
-    } catch (Exception $e) {
+        $d = new DateTime($dateStr);
+        return $d->format($long ? 'D, j M Y' : 'D, j M');
+    } catch (Throwable $e) {
         return date($long ? 'D, j M Y' : 'D, j M');
     }
 }
 
 /**
- * Map a destination name (e.g., "Paris") to an IATA code.
- * 1) Use curated map for featured destinations.
- * 2) If not found, try DB lookup by city or airport name.
+ * Map a destination name (e.g. "Paris") to an IATA code using a curated map, then DB.
+ * Uses airports.code (your schema).
  */
-function mapDestinationToIata(PDO $db, string $destination) {
+function mapDestinationToIata(PDO $pdo, string $destination): ?string {
     $map = [
         'Paris' => 'CDG',
-        'Tokyo' => 'NRT',                 // could also use HND
+        'Tokyo' => 'NRT',
         'New York' => 'JFK',
         'Rome' => 'FCO',
         'Bali' => 'DPS',
@@ -32,9 +68,9 @@ function mapDestinationToIata(PDO $db, string $destination) {
         'Dubai' => 'DXB',
         'Barcelona' => 'BCN',
         'Venice' => 'VCE',
-        'Kyoto' => 'KIX',                 // nearest major airport (Osaka)
+        'Kyoto' => 'KIX',
         'Santorini' => 'JTR',
-        'Machu Picchu' => 'CUZ',          // Cusco
+        'Machu Picchu' => 'CUZ',
         'Queenstown' => 'ZQN',
     ];
 
@@ -43,53 +79,63 @@ function mapDestinationToIata(PDO $db, string $destination) {
 
     try {
         $like = '%' . $destination . '%';
-        $sql = "SELECT iata_code
+        $sql = "SELECT code
                   FROM airports
                  WHERE city ILIKE :q OR name ILIKE :q
               ORDER BY (CASE WHEN city = :exact OR name = :exact THEN 0 ELSE 1 END),
                        LENGTH(city), LENGTH(name)
                  LIMIT 1";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([':q' => $like, ':exact' => $destination]);
-        $code = $stmt->fetchColumn();
-        if ($code) return $code;
-    } catch (Exception $e) {}
-
+        $st = $pdo->prepare($sql);
+        $st->execute([':q' => $like, ':exact' => $destination]);
+        $code = $st->fetchColumn();
+        if ($code) return (string)$code;
+    } catch (Throwable $e) {
+        // ignore and fall through
+    }
     return null;
 }
 
-/** Get airport name by IATA, fallback to code itself */
-function airportNameByCode(PDO $db, string $code) {
-    $stmt = $db->prepare("SELECT name FROM airports WHERE iata_code = ?");
-    $stmt->execute([$code]);
-    return $stmt->fetchColumn() ?: $code;
+/** Get airport name by IATA code (airports.code in your schema). */
+function airportNameByCode(PDO $pdo, string $code): string {
+    try {
+        $st = $pdo->prepare("SELECT name FROM airports WHERE code = :c LIMIT 1");
+        $st->execute([':c' => $code]);
+        $name = $st->fetchColumn();
+        return $name ? (string)$name : $code;
+    } catch (Throwable $e) {
+        return $code;
+    }
 }
 
-/* -------------------- Inputs -------------------- */
-$destination = isset($_GET['destination']) ? trim($_GET['destination']) : null;
-$auto = isset($_GET['auto']) && $_GET['auto'] == '1';
+/* ---------------- Inputs ---------------- */
+$destination = isset($_GET['destination']) ? trim((string)$_GET['destination']) : null;
+$auto = isset($_GET['auto']) && $_GET['auto'] === '1';
 
-/* If a destination link was clicked, default origin to CMB unless user passed ?from= */
-$from = $_GET['from'] ?? ($destination ? 'CMB' : 'MXP');
-$to   = $_GET['to']   ?? 'CMB';
-$date = $_GET['date'] ?? date('Y-m-d');
+// If a destination link was clicked, default origin to CMB unless user passed ?from=
+$from = isset($_GET['from']) ? strtoupper(trim((string)$_GET['from'])) : ($destination ? 'CMB' : 'MXP');
+$to   = isset($_GET['to'])   ? strtoupper(trim((string)$_GET['to']))   : 'CMB';
+$date = isset($_GET['date']) ? (string)$_GET['date'] : date('Y-m-d');
+
 $passengers = (int)($_GET['passengers'] ?? 1);
 if ($passengers < 1) $passengers = 1;
 
-/* Validate date format */
+// Validate date format
 if (!DateTime::createFromFormat('Y-m-d', $date)) {
     $date = date('Y-m-d');
 }
 
-/* Map destination name to IATA when provided and no explicit ?to= */
-if ($destination && (!isset($_GET['to']) || empty($_GET['to']))) {
-    $mapped = mapDestinationToIata($db, $destination);
+// Map destination name → IATA if provided and no explicit ?to=
+if ($destination && (!isset($_GET['to']) || $_GET['to'] === '')) {
+    $mapped = mapDestinationToIata($pdo, $destination);
     if ($mapped) $to = $mapped;
 }
 
-/* Airport names for header */
-$fromAirport = airportNameByCode($db, $from);
-$toAirport   = airportNameByCode($db, $to);
+// Names for the header
+$fromAirport = airportNameByCode($pdo, $from);
+$toAirport   = airportNameByCode($pdo, $to);
+
+// Logged-in?
+$isLoggedIn = !empty($_SESSION['user_id']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -112,17 +158,18 @@ $toAirport   = airportNameByCode($db, $to);
 <body class="font-sans bg-gray-50">
     <!-- Header -->
     <header class="flex items-center justify-between px-8 py-4 bg-[#0A1A3F] sticky top-0 z-50 shadow-lg">
-        <div class="text-2xl font-bold text-white flex items-center">
+        <a href="<?php echo BASE_URL; ?>/index.php" class="text-2xl font-bold text-white flex items-center">
             <i class="fas fa-plane text-blue-400 mr-2"></i>
             Sheron Airways
-        </div>
+        </a>
         <nav class="flex items-center space-x-8">
-            <a href="index.php" class="text-white hover:text-blue-300">Home</a>
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="logout.php" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Logout</a>
+            <a href="<?php echo BASE_URL; ?>/index.php#search-flight" class="text-white hover:text-blue-300">Book Flights</a>
+            <a href="<?php echo BASE_URL; ?>/#about" class="text-white hover:text-blue-300">About Us</a>
+            <?php if ($isLoggedIn): ?>
+                <a href="<?php echo BASE_URL; ?>/logout.php" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Logout</a>
             <?php else: ?>
-                <a href="login.php" class="text-white hover:text-blue-300">Login</a>
-                <a href="signup.php" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Sign Up</a>
+                <a href="<?php echo BASE_URL; ?>/auth/signin.php" class="text-white hover:text-blue-300">Login</a>
+                <a href="<?php echo BASE_URL; ?>/auth/signup.php" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Sign Up</a>
             <?php endif; ?>
         </nav>
     </header>
@@ -158,7 +205,7 @@ $toAirport   = airportNameByCode($db, $to);
                     </div>
                 </div>
 
-                <a href="index.php#search-flight" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                <a href="<?php echo BASE_URL; ?>/index.php#search-flight" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
                     <i class="fas fa-pencil-alt mr-2"></i> Modify Search
                 </a>
             </div>
@@ -177,12 +224,13 @@ $toAirport   = airportNameByCode($db, $to);
     </section>
 
     <script>
-        // Params to JS
+        // Expose BASE_URL to JS and server-chosen params
+        const BASE = <?php echo json_encode(BASE_URL); ?>;
         const searchParams = {
-            from: '<?= htmlspecialchars($from, ENT_QUOTES) ?>',
-            to: '<?= htmlspecialchars($to, ENT_QUOTES) ?>',
-            date: '<?= htmlspecialchars($date, ENT_QUOTES) ?>',
-            passengers: <?= (int)$passengers ?>
+            from: <?php echo json_encode($from); ?>,
+            to: <?php echo json_encode($to); ?>,
+            date: <?php echo json_encode($date); ?>,
+            passengers: <?php echo (int)$passengers; ?>
         };
 
         async function fetchFlights(date) {
@@ -193,7 +241,7 @@ $toAirport   = airportNameByCode($db, $to);
                     date,
                     passengers: String(searchParams.passengers),
                 });
-                const res = await fetch(`api/flights.php?${qs.toString()}`);
+                const res = await fetch(`${BASE}/api/flights.php?${qs.toString()}`);
                 if (!res.ok) throw new Error('Network error');
                 return await res.json();
             } catch (e) {
@@ -320,7 +368,7 @@ $toAirport   = airportNameByCode($db, $to);
                         <i class="fas fa-plane-slash text-4xl text-gray-400 mb-4"></i>
                         <h3 class="text-xl font-medium text-gray-700 mb-2">No flights available</h3>
                         <p class="text-gray-500 mb-4">We couldn't find any flights for the selected date.</p>
-                        <a href="index.php#search-flight" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="${BASE}/index.php#search-flight" class="text-blue-600 hover:text-blue-800 font-medium">
                             <i class="fas fa-search mr-2"></i> Try a different search
                         </a>
                     </div>
@@ -357,7 +405,7 @@ $toAirport   = airportNameByCode($db, $to);
                 `;
                 tab.addEventListener('click', () => {
                     const url = new URL(window.location.href);
-                    url.pathname = 'searchflight.php';
+                    url.pathname = `${BASE}/search_results.php`;
                     url.searchParams.set('from', searchParams.from);
                     url.searchParams.set('to', searchParams.to);
                     url.searchParams.set('date', d);
@@ -388,10 +436,10 @@ $toAirport   = airportNameByCode($db, $to);
 
         function selectFlight(flightId, event) {
             event.stopPropagation();
-            <?php if (isset($_SESSION['user_id'])): ?>
-                window.location.href = `booking.php?flightId=${encodeURIComponent(flightId)}&passengers=${encodeURIComponent(searchParams.passengers)}`;
+            <?php if ($isLoggedIn): ?>
+                window.location.href = `${BASE}/booking.php?flightId=${encodeURIComponent(flightId)}&passengers=${encodeURIComponent(searchParams.passengers)}`;
             <?php else: ?>
-                window.location.href = `login.php?redirect=${encodeURIComponent('booking.php?flightId=' + flightId + '&passengers=' + searchParams.passengers)}`;
+                window.location.href = `${BASE}/auth/signin.php?redirect=${encodeURIComponent('booking.php?flightId=' + flightId + '&passengers=' + searchParams.passengers)}`;
             <?php endif; ?>
         }
 

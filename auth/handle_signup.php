@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $first_name = trim($_POST['first_name'] ?? '');
 $last_name  = trim($_POST['last_name'] ?? '');
 $email      = strtolower(trim($_POST['email'] ?? ''));
-$phone      = trim($_POST['phone'] ?? '');
+
 $password   = $_POST['password'] ?? '';
 $confirm    = $_POST['confirm_password'] ?? '';
 
@@ -48,8 +48,8 @@ try {
 
   // Insert user (user_type defaults to 'customer', is_active TRUE)
   $ins = $conn->prepare("
-    INSERT INTO users (first_name, last_name, email, password, phone, user_type, is_active)
-    VALUES (:first_name, :last_name, :email, :password, :phone, 'customer', TRUE)
+    INSERT INTO users (first_name, last_name, email, password, user_type, is_active)
+    VALUES (:first_name, :last_name, :email, :password,  'customer', TRUE)
     RETURNING user_id
   ");
   $ins->execute([
@@ -57,7 +57,7 @@ try {
     ':last_name'  => $last_name,
     ':email'      => $email,
     ':password'   => $hash,
-    ':phone'      => $phone !== '' ? $phone : null,
+    
   ]);
 
   $_SESSION['flash_ok'] = 'Account created! Please sign in.';

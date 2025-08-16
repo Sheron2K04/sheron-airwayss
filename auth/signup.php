@@ -275,13 +275,7 @@ require_once __DIR__ . '/../includes/config.php';
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="phone">Phone number (optional)</label>
-          <div class="input-wrapper">
-            <i class="fas fa-phone input-icon"></i>
-            <input id="phone" name="phone" type="tel" placeholder="+1 (123) 456-7890" />
-          </div>
-        </div>
+        
 
         <div class="form-group">
           <label for="password">Password</label>
